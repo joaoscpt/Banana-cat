@@ -1,5 +1,6 @@
 local HUB_URL = "https://raw.githubusercontent.com/aloaloalo322/sssdas/refs/heads/main/cc"
-local KEYS_URL = "https://raw.githubusercontent.com/joaoscpt/Banana-cat/refs/heads/main/Banana%20hub" -- SEU ARQUIVO DE KEYS
+local KEYS_URL = "https://raw.githubusercontent.com/joaoscpt/Banana-cat/refs/heads/main/Banana%20hub"
+local HttpService = game:GetService("HttpService")
 
 local Rayfield
 pcall(function() Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))() end)
@@ -7,35 +8,31 @@ if not Rayfield then
     Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/main/source'))()
 end
 
-local function getKeysRealTime()
-    -- o true no final do HttpGet desativa o cache do executor + ?v= aleatório desativa cache do github
-    local url = KEYS_URL.."?v="..math.random(1,99999999).."&t="..tick()
-    local s,c = pcall(function() return game:HttpGet(url, true) end)
-    if s then return c end
+local function getKeys()
+    local url = KEYS_URL.."?v="..math.random(1,999999).."&t="..tick()
+    local ok, content = pcall(function() return game:HttpGet(url, true) end)
+    if not ok or not content then return nil end
+    local ok2, decoded = pcall(function() return HttpService:JSONDecode(content) end)
+    if ok2 then return decoded end
     return nil
 end
 
 local function Check(k)
     k = k:gsub("%s+","")
-    local keys = getKeysRealTime()
-    if not keys then return false end
-    for line in keys:gmatch("[^\r\n]+") do
-        if line:gsub("%s+","") == k then return true end
+    local data = getKeys()
+    if data and data[k] == true then -- SÓ ATIVA SE FOR true
+        return true
     end
     return false
 end
 
-local function IniciarVerificacaoTempoReal(keyUsada)
+local function IniciarAntiBypass(keyUsada)
     task.spawn(function()
-        while task.wait(10) do -- AGORA 10 SEGUNDOS PRA SER QUASE TEMPO REAL
-            local content = getKeysRealTime()
-            if content then
-                local aindaValida = false
-                for linha in content:gmatch("[^\r\n]+") do
-                    if linha:gsub("%s+","") == keyUsada then aindaValida = true break end
-                end
-                if not aindaValida then
-                    game:GetService("Players").LocalPlayer:Kick("Key desativada pelo dono.")
+        while task.wait(10) do
+            local data = getKeys()
+            if data then
+                if data[keyUsada] ~= true then -- se virou false ou sumiu
+                    game:GetService("Players").LocalPlayer:Kick("Sua key foi desativada.")
                     break
                 end
             end
@@ -66,10 +63,10 @@ Tab:CreateButton({
         if Check(inputKey) then
             local keySalva = inputKey:gsub("%s+","")
             Rayfield:Destroy()
-            IniciarVerificacaoTempoReal(keySalva)
+            IniciarAntiBypass(keySalva)
             loadstring(game:HttpGet(HUB_URL))()
         else
-            Rayfield:Notify({Title = "Inválida", Content = "Essa key não existe mais", Duration = 3})
+            Rayfield:Notify({Title = "Key Inválida", Content = "Essa key ta em false", Duration = 3})
         end
    end,
 })
