@@ -1,0 +1,51 @@
+local BANANA_HUB_URL = "https://raw.githubusercontent.com/joaoscpt/Banana-cat/refs/heads/main/Banana%20hub"
+
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+   Name = "Banana Hub - Key System",
+   LoadingTitle = "Banana Hub",
+   LoadingSubtitle = "by joaoscpt",
+   ConfigurationSaving = { Enabled = false },
+   Discord = { Enabled = false },
+   KeySystem = false
+})
+
+local Tab = Window:CreateTab("Key System", 4483362458)
+getgenv().KeyInput = ""
+
+local ValidKeys = {
+    ["R8T5-joaokey-X3Q9"] = true,
+    ["F7K3-joaokey-9M2P"] = true
+}
+
+Tab:CreateInput({
+   Name = "Key",
+   PlaceholderText = "Digite sua key",
+   RemoveTextAfterFocusLost = false,
+   Callback = function(Text)
+       getgenv().KeyInput = Text
+   end,
+})
+
+Tab:CreateButton({
+   Name = "Verificar Key",
+   Callback = function()
+        if ValidKeys[getgenv().KeyInput] then
+            Rayfield:Notify({Title = "Correta!", Content = "Carregando Banana Hub...", Duration = 2})
+            wait(1)
+            Rayfield:Destroy()
+            loadstring(game:HttpGet(BANANA_HUB_URL))()
+        else
+            Rayfield:Notify({Title = "Key Inválida", Content = "Key não encontrada", Duration = 3})
+        end
+   end,
+})
+
+Tab:CreateButton({
+   Name = "Get Key",
+   Callback = function()
+       setclipboard("https://discord.gg/seu-discord") -- coloca seu discord/linkvertise aqui
+       Rayfield:Notify({Title = "Copiado", Content = "Link da key copiado", Duration = 3})
+   end,
+})
