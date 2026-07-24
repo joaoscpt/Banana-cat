@@ -1,40 +1,43 @@
--- CONFIGURA AQUI SEUS LINKS
-local HUB_URL = "https://raw.githubusercontent.com/joaoscpt/Banana-cat/main/BananaHub.lua"
+local HUB_URL = "https://raw.githubusercontent.com/aloaloalo322/sssdas/refs/heads/main/cc"
 local KEYS_URL = "https://raw.githubusercontent.com/joaoscpt/Banana-cat/main/keys.txt"
-local STATUS_URL = "https://raw.githubusercontent.com/joaoscpt/Banana-cat/main/status.txt"
 
--- Carrega Rayfield com fallback
-local Rayfield
-local ok = pcall(function()
-    Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-end)
-if not Rayfield then
-    Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/main/source'))()
-end
+local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/main/source'))()
 
 local function getRemote(url)
-    local s,c = pcall(function() return game:HttpGet(url.."?nocache="..tick()) end)
+    local s,c = pcall(function() return game:HttpGet(url.."?t="..tick()) end)
     if s then return c end
     return nil
 end
 
--- CHECA SE VOCÊ DESATIVOU O KEY SYSTEM
-local status = getRemote(STATUS_URL)
-if status then
-    status = status:gsub("%s+",""):lower()
-    if status == "off" or status == "0" or status == "desativado" then
-        loadstring(game:HttpGet(HUB_URL))()
-        return
+local function AtivarHub()
+    Rayfield:Destroy()
+    loadstring(game:HttpGet(HUB_URL))()
+end
+
+local function VerificarKey(texto)
+    local input = texto:gsub("%s+","")
+    if input == "" then return end
+    local content = getRemote(KEYS_URL)
+    local valido = false
+    if content then
+        for linha in content:gmatch("[^\r\n]+") do
+            if linha:gsub("%s+","") == input then valido = true break end
+        end
+    else
+        if input == "R8T5-joaokey-X3Q9" or input == "F7K3-joaokey-9M2P" then valido = true end
+    end
+    if valido then
+        AtivarHub()
+    else
+        Rayfield:Notify({Title = "Inválida", Content = "Key desativada", Duration = 2})
     end
 end
 
--- SE TÁ ON, MOSTRA O RAYFIELD
 local Window = Rayfield:CreateWindow({
    Name = "Banana Hub | Key System",
    LoadingTitle = "Banana Hub",
    LoadingSubtitle = "Carregando...",
    ConfigurationSaving = { Enabled = false },
-   Discord = { Enabled = false },
    KeySystem = false
 })
 
@@ -42,35 +45,16 @@ local Tab = Window:CreateTab("Key System", 4483362458)
 getgenv().KeyInput = ""
 
 Tab:CreateInput({
-   Name = "Digite sua Key",
-   PlaceholderText = "R8T5-joaokey-XXXX",
+   Name = "Key",
+   PlaceholderText = "", -- AGORA FICA VAZIO, NÃO MOSTRA MAIS NADA
    RemoveTextAfterFocusLost = false,
-   Callback = function(Text) getgenv().KeyInput = Text end,
+   Callback = function(Text)
+       getgenv().KeyInput = Text
+       VerificarKey(Text)
+   end,
 })
 
 Tab:CreateButton({
    Name = "Verificar Key",
-   Callback = function()
-        local input = getgenv().KeyInput:gsub("%s+","")
-        
-        local content = getRemote(KEYS_URL)
-        local valid = false
-        
-        if content then
-            for line in content:gmatch("[^\r\n]+") do
-                if line:gsub("%s+","") == input then valid = true break end
-            end
-        else -- fallback se github cair, usa as 2 keys fixas
-            if input == "R8T5-joaokey-X3Q9" or input == "F7K3-joaokey-9M2P" then valid = true end
-        end
-
-        if valid then
-            Rayfield:Notify({Title = "Correta!", Content = "Carregando Hub...", Duration = 2})
-            wait(1)
-            Rayfield:Destroy()
-            loadstring(game:HttpGet(HUB_URL))()
-        else
-            Rayfield:Notify({Title = "Key Inválida", Content = "Verifica se digitou certo", Duration = 3})
-        end
-   end,
+   Callback = function() VerificarKey(getgenv().KeyInput) end,
 })
