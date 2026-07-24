@@ -2,31 +2,44 @@ local HUB_URL = "https://raw.githubusercontent.com/aloaloalo322/sssdas/refs/head
 local KEYS_URL = "https://raw.githubusercontent.com/joaoscpt/Banana-cat/main/keys.txt"
 
 local Rayfield
-local ok = pcall(function()
-    Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-end)
+pcall(function() Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))() end)
 if not Rayfield then
     Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/main/source'))()
 end
 
-if not Rayfield then
-    warn("Rayfield não carregou")
-    return
-end
-
-local function getKeys()
-    local s,c = pcall(function() return game:HttpGet(KEYS_URL.."?t="..tick()) end)
+local function getRemote(url)
+    local s,c = pcall(function() return game:HttpGet(url.."?t="..tick()) end)
     if s then return c end
-    return "R8T5-joaokey-X3Q9\nF7K3-joaokey-9M2P"
+    return nil
 end
 
 local function Check(k)
     k = k:gsub("%s+","")
-    local keys = getKeys()
+    local keys = getRemote(KEYS_URL) or "R8T5-joaokey-X3Q9\nF7K3-joaokey-9M2P"
     for line in keys:gmatch("[^\r\n]+") do
         if line:gsub("%s+","") == k then return true end
     end
     return false
+end
+
+-- LOOP QUE EXPULSA SE A KEY FICAR INVALIDA
+local function IniciarAntiBypass(keyUsada)
+    getgenv().KeyAtual = keyUsada
+    task.spawn(function()
+        while task.wait(30) do -- checa a cada 30 segundos, pode por 10 se quiser mais rápido
+            local content = getRemote(KEYS_URL)
+            if content then
+                local aindaValida = false
+                for linha in content:gmatch("[^\r\n]+") do
+                    if linha:gsub("%s+","") == keyUsada then aindaValida = true break end
+                end
+                if not aindaValida then
+                    game:GetService("Players").LocalPlayer:Kick("Sua key foi desativada pelo dono do Banana Hub.")
+                    break
+                end
+            end
+        end
+    end)
 end
 
 local Window = Rayfield:CreateWindow({
@@ -51,10 +64,13 @@ Tab:CreateButton({
    Name = "Verificar",
    Callback = function()
         if Check(inputKey) then
+            Rayfield:Notify({Title = "Ativada", Content = "Bem vindo!", Duration = 2})
+            local keyPraSalvar = inputKey
             Rayfield:Destroy()
+            IniciarAntiBypass(keyPraSalvar) -- inicia o verificador antes de abrir o hub
             loadstring(game:HttpGet(HUB_URL))()
         else
-            Rayfield:Notify({Title = "Key Inválida", Content = "Foi desativada ou digitada errada", Duration = 3})
+            Rayfield:Notify({Title = "Inválida", Content = "Key não existe", Duration = 3})
         end
    end,
 })
