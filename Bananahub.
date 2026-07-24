@@ -1,60 +1,60 @@
 local HUB_URL = "https://raw.githubusercontent.com/aloaloalo322/sssdas/refs/heads/main/cc"
 local KEYS_URL = "https://raw.githubusercontent.com/joaoscpt/Banana-cat/main/keys.txt"
 
-local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/main/source'))()
+local Rayfield
+local ok = pcall(function()
+    Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+end)
+if not Rayfield then
+    Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/main/source'))()
+end
 
-local function getRemote(url)
-    local s,c = pcall(function() return game:HttpGet(url.."?t="..tick()) end)
+if not Rayfield then
+    warn("Rayfield não carregou")
+    return
+end
+
+local function getKeys()
+    local s,c = pcall(function() return game:HttpGet(KEYS_URL.."?t="..tick()) end)
     if s then return c end
-    return nil
+    return "R8T5-joaokey-X3Q9\nF7K3-joaokey-9M2P"
 end
 
-local function AtivarHub()
-    Rayfield:Destroy()
-    loadstring(game:HttpGet(HUB_URL))()
-end
-
-local function VerificarKey(texto)
-    local input = texto:gsub("%s+","")
-    if input == "" then return end
-    local content = getRemote(KEYS_URL)
-    local valido = false
-    if content then
-        for linha in content:gmatch("[^\r\n]+") do
-            if linha:gsub("%s+","") == input then valido = true break end
-        end
-    else
-        if input == "R8T5-joaokey-X3Q9" or input == "F7K3-joaokey-9M2P" then valido = true end
+local function Check(k)
+    k = k:gsub("%s+","")
+    local keys = getKeys()
+    for line in keys:gmatch("[^\r\n]+") do
+        if line:gsub("%s+","") == k then return true end
     end
-    if valido then
-        AtivarHub()
-    else
-        Rayfield:Notify({Title = "Inválida", Content = "Key desativada", Duration = 2})
-    end
+    return false
 end
 
 local Window = Rayfield:CreateWindow({
-   Name = "Banana Hub | Key System",
+   Name = "Banana Hub",
    LoadingTitle = "Banana Hub",
-   LoadingSubtitle = "Carregando...",
+   LoadingSubtitle = "Key System",
    ConfigurationSaving = { Enabled = false },
    KeySystem = false
 })
 
 local Tab = Window:CreateTab("Key System", 4483362458)
-getgenv().KeyInput = ""
+local inputKey = ""
 
 Tab:CreateInput({
    Name = "Key",
-   PlaceholderText = "", -- AGORA FICA VAZIO, NÃO MOSTRA MAIS NADA
+   PlaceholderText = "",
    RemoveTextAfterFocusLost = false,
-   Callback = function(Text)
-       getgenv().KeyInput = Text
-       VerificarKey(Text)
-   end,
+   Callback = function(t) inputKey = t end,
 })
 
 Tab:CreateButton({
-   Name = "Verificar Key",
-   Callback = function() VerificarKey(getgenv().KeyInput) end,
+   Name = "Verificar",
+   Callback = function()
+        if Check(inputKey) then
+            Rayfield:Destroy()
+            loadstring(game:HttpGet(HUB_URL))()
+        else
+            Rayfield:Notify({Title = "Key Inválida", Content = "Foi desativada ou digitada errada", Duration = 3})
+        end
+   end,
 })
